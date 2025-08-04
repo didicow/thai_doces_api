@@ -7,6 +7,36 @@ const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base(
   process.env.AIRTABLE_BASE_ID
 );
 
+// GET para listar pedidos
+router.get("/", async (req, res) => {
+  try {
+    const records = await base(process.env.AIRTABLE_TABLE_ORDERS)
+      .select()
+      .all();
+
+    const orders = records.map((record) => ({
+      id: record.id,
+      cliente: record.get("Cliente"),
+      produto: record.get("Produto"),
+      quantidade: record.get("Quantidade"),
+      recheio: record.get("Recheio"),
+      observacao: record.get("Observação"),
+      entrega: record.get("Entrega"),
+      endereco: record.get("Endereço"),
+      statusPagamento: record.get("Status Pagamento"),
+      dataPedido: record.get("Data Pedido"),
+      dataEntrega: record.get("Data Entrega"),
+      valorTotal: record.get("Valor Total (€)"),
+    }));
+
+    res.status(200).json(orders);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Erro ao buscar pedidos" });
+  }
+});
+
+// POST para criar pedido
 router.post("/", async (req, res) => {
   try {
     const {
@@ -26,7 +56,7 @@ router.post("/", async (req, res) => {
 
     const valorTotal = quantidade * valorUnitario;
 
-    await base(process.env.AIRTABLE_TABLE_NAME).create([
+    await base(process.env.AIRTABLE_TABLE_ORDERS).create([
       {
         fields: {
           Cliente: cliente,
@@ -49,8 +79,5 @@ router.post("/", async (req, res) => {
     res.status(500).json({ error: "Erro ao salvar pedido" });
   }
 });
-
-
-
 
 module.exports = router;
